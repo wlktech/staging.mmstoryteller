@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500&display=swap');
+@import url('https://fonts.cdnfonts.com/css/source-sans-pro');
+
+.nav-link{
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+}
+.nav-spacing{
+    padding-right: 33px;
+}
+.logo{
+    color: #FE5092;
+    font-size: 20px;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 600;
+}
+.sub-logo{
+    color: #443E40;
+    font-size: 12px;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 400;
+}
+.btn-outline-pink{
+    border-radius: 4px;
+    border: 1px solid #FE3C86;
+    font-weight: 600;
+    color: #FE3C86;
+}
+.btn-outline-pink:hover{
+    border-radius: 4px;
+    background-color: #FE3C86;
+    font-weight: 600;
+    color: #ffffff;
+}
+.btn-pink{
+    border-radius: 4px;
+    background-color: #FF3C86;
+    width: 104px;
+    height: 36px;
+    padding: 8px 16px;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+}
+.btn-pink:hover{
+    background-color: #FF3C86;
+    color: #fff;
+    box-shadow: 1px 2px 3px #FF3C86;
+}
+
+.footer{
+    color: #FFF;
+    text-align: center;
+    font-size: 12px;
+    font-family: 'Montserrat', sans-serif;
+    letter-spacing: 0.5px;
+    height: 40px;
+    padding: 12.5px 0;
+    font-weight: 400;
+    background-color: black;
+    margin-top: 60.5px;
+}
+.social i{
+    font-size: 32px;
+    color: #FF8CB9;
+}
+.social p{
+    color: #18222B;
+    font-size: 16px;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 600;
+}
+footer .header{
+    color: #222;
+    font-size: 16px;
+    font-family: Montserrat;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+}
+footer .link{
+    display: block;
+    color: #222;
+    margin-bottom: 12px;
+    font-size: 12px;
+    font-family: Montserrat;
+    text-transform: uppercase;
+    text-decoration: none;
+}
+.subscribe-link{
+    color: #FE5092;
+    text-align: center;
+    font-family: Montserrat;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    text-transform: uppercase;
+}
+footer .subscribe{
+    padding: 8px;
+    border-radius: 4px;
+    background: #FF3C86;
+    color: white;
+}
+footer .subscribe:hover{
+    padding: 8px;
+    border-radius: 4px;
+    background: #FF3C86;
+    color: white;
+    box-shadow: 1px 2px 3px grey;
+}
+footer .subscribe-text{
+    color: #FFF;
+    text-align: center;
+    font-size: 12px;
+    font-family: Montserrat;
+    font-weight: 600;
+    text-transform: uppercase;
+}
