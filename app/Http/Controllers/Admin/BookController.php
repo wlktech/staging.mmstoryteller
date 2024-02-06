@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Book;
-use App\Models\Chapter;
 use App\Models\Category;
+use App\Models\Chapter;
 use App\Models\Genre;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 
 class BookController extends Controller
@@ -95,7 +96,7 @@ class BookController extends Controller
         $genres = Genre::all();
         return view('backend.books.create', compact('categories', 'genres'));
     }
-    public function store(Request $request){
+    public function upload(Request $request){
         $request->validate([
             'title' => 'required|string',
             'image' => 'required|file|mimes:jpeg,png,jpg|dimensions:width=1050,height=1650|max:3000',
@@ -130,6 +131,138 @@ class BookController extends Controller
 
         return redirect('/admin/book/')->with('success', "New Book Created.");
     }
+
+    public function imgStore(Request $request)
+    {
+        // //cropping code start
+        $folderPath = public_path('assets/img/book/');
+
+        // // Ensure the directory exists and is writable
+        if (!File::isDirectory($folderPath)) {
+            File::makeDirectory($folderPath, 0775, true, true);
+        }
+
+        $image_parts = explode(";base64,", $request->image);
+        $image_type_aux = explode("image/", $image_parts[0]);
+        $image_type = $image_type_aux[1];
+        $image_base64 = base64_decode($image_parts[1]);
+
+        $imageName = uniqid() . '.png';
+        $imageFullPath = $folderPath . $imageName;
+
+        file_put_contents($imageFullPath, $image_base64);
+        // //cropping code end
+
+        $saveFile = new Book;
+        $saveFile->image = $imageName;
+        $saveFile->user_id = Auth::user()->id;
+        $saveFile->save();
+        return response()->json(['success' => 'Crop Image Saved/Uploaded Successfully']);
+    }
+
+    public function imgUpdate(Request $request, $id)
+    {
+        $book_img = Book::find($id);
+        // //cropping code start
+        $folderPath = public_path('assets/img/book/');
+
+        // // Ensure the directory exists and is writable
+        if (!File::isDirectory($folderPath)) {
+            File::makeDirectory($folderPath, 0775, true, true);
+        }
+
+        $image_parts = explode(";base64,", $request->image);
+        $image_type_aux = explode("image/", $image_parts[0]);
+        $image_type = $image_type_aux[1];
+        $image_base64 = base64_decode($image_parts[1]);
+
+        $imageName = uniqid() . '.png';
+        $imageFullPath = $folderPath . $imageName;
+
+        file_put_contents($imageFullPath, $image_base64);
+        // //cropping code end
+
+        $book_img->image = $imageName;
+        $book_img->user_id = Auth::user()->id;
+        $book_img->save();
+        return response()->json(['success' => 'Crop Image Saved/Uploaded Successfully']);
+    }
+
+    public function store(Request $request){
+        $request->validate([
+            'title' => 'required|string',
+            'category_id' => 'required',
+            'genre_id' => 'required',
+            'description' => 'required',
+        ]);
+
+        $book = Book::where('user_id', Auth::user()->id)->latest()->first();
+        $book->update([
+            'title' => $request->title,
+            'category_id' => $request->category_id,
+            'description' => $request->description,
+            'user_id' => Auth::user()->id,
+        ]);
+
+        $genres = [];
+        foreach($request->genre_id as $g){
+            $genre = Genre::where('id', $g)->first();
+            if(!$genre){
+                return redirect()->back()->with('error', "Genre Not Found!");
+            }
+            $genres[] = $genre->id;
+        }
+        $b = Book::find($book->id);
+        $b->genre()->sync($genres);
+
+        return redirect('/admin/book/')->with('success', "New Book Created.");
+    }
+
+    // public function store(Request $request)
+    // {
+    //     // Validate request data
+    //     $request->validate([
+    //         'title' => 'required|string',
+    //         'category_id' => 'required',
+    //         'genre_id' => 'required|array', // Ensure genre_id is sent as an array
+    //         'description' => 'required',
+    //         'image' => 'required|string', // Validate image as a base64 string
+    //     ]);
+
+    //     // Attempt to decode and save the book image
+    //     $folderPath = public_path('assets/img/book/');
+    //     if (!File::isDirectory($folderPath)) {
+    //         File::makeDirectory($folderPath, 0775, true, true);
+    //     }
+    //     $image_parts = explode(";base64,", $request->image);
+    //     $image_type_aux = explode("image/", $image_parts[0]);
+    //     $image_type = $image_type_aux[1];
+    //     $image_base64 = base64_decode($image_parts[1]);
+    //     $imageName = uniqid() . '.png';
+    //     $imageFullPath = $folderPath . $imageName;
+    //     file_put_contents($imageFullPath, $image_base64);
+
+    //     // Create the book with the user and image data
+    //     $book = new Book;
+    //     $book->title = $request->title;
+    //     $book->category_id = $request->category_id;
+    //     $book->description = $request->description;
+    //     $book->user_id = Auth::user()->id; // Assuming the user is authenticated
+    //     $book->image = $imageName; // Save the image name/path as needed
+    //     $book->save();
+
+    //     // Handle genres
+    //     $genres = $request->genre_id;
+    //     foreach ($genres as $genreId) {
+    //         $genre = Genre::find($genreId);
+    //         if (!$genre) {
+    //             // Optionally handle the error, e.g., log it or throw an exception
+    //         }
+    //     }
+    //     $book->genres()->sync($genres); // Assuming the relationship is named `genres` in the Book model
+
+    //     return redirect('/admin/book/')->with('success', "New Book Created.");
+    // }
 
     //view
     public function view($id){

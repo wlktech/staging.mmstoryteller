@@ -230,7 +230,9 @@ Route::group(['middleware' => ['auth', 'role:Super Admin']], function () {
     //Book CRUD
     Route::get('/admin/book/', [BookController::class, 'index']); //book lists
     Route::get('/admin/book/create/', [BookController::class, 'create']); //create
-    Route::post('/admin/book/create/', [BookController::class, 'store']); //store
+    Route::post('admin/book/image/store', [BookController::class, 'imgStore'])->name('imgStore');
+    Route::post('admin/book/image/edit/{id}', [BookController::class, 'imgUpdate'])->name('imgUpdate');
+    Route::post('/admin/book/create/', [BookController::class, 'store'])->name('book-store'); //store
     Route::get('/admin/book/view/{id}', [BookController::class, 'view']); //view
     Route::get('/admin/book/edit/{id}', [BookController::class, 'edit']); //update
     Route::post('/admin/book/edit/{id}', [BookController::class, 'update']); //update

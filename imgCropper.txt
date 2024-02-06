@@ -1,0 +1,7 @@
+Image Cropper Changes
+view(book.create)
+view(book.index)
+view(book.edit)
+web.php post route(1)
+Admin/BookController.php
+Author/AuthorController.php

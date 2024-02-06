@@ -100,7 +100,7 @@
                             <span class="badge badge-primary">{{ $genre->name }}</span><br>
                             @endforeach --}}
                         </td>
-                        <td>{{ $book->category->name }}</td>
+                        <td>{{ $book->category->name ?? "" }}</td>
                         <td style="width: 160px;">{{ $book->user->name }}</td>
                         <td>
                             @if ($book->status == "ONGOING")
