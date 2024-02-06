@@ -133,6 +133,8 @@ Route::group(['middleware' => ['auth', 'role:Author']], function () {
     Route::get('/author/novels/', [AuthorController::class, 'novels']); //novel lists
     Route::get('/author/novels/create', [AuthorController::class, 'create']); //novel create form
     Route::post('/author/novels/create', [AuthorController::class, 'store']); //novel store function
+    Route::post('author/novels/image/store', [AuthorController::class, 'imgStore'])->name('author.imgStore');
+    Route::post('author/novels/image/edit/{id}', [AuthorController::class, 'imgUpdate'])->name('author.imgUpdate');
     Route::get('/author/novels/edit/{id}', [AuthorController::class, 'edit']); //novel edit form
     Route::get('/author/novels/view/{id}', [AuthorController::class, 'view']); //novel view form
     Route::post('/author/novels/edit/{id}', [AuthorController::class, 'update']); //novel edit function

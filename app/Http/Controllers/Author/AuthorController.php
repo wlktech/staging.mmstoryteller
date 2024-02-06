@@ -91,24 +91,18 @@ class AuthorController extends Controller
     public function store(Request $request){
         $request->validate([
             'title' => 'required|string',
-            'image' => 'required|file|mimes:jpeg,png,jpg|dimensions:width=1050,height=1650|max:3000',
+            // 'image' => 'required|file|mimes:jpeg,png,jpg|dimensions:width=1050,height=1650|max:3000',
             'category_id' => 'required',
             'genre_id' => 'required',
             'description' => 'required|string',
         ]);
 
-        // image
-        $image = $request->file('image');
-        $ext = $image->getClientOriginalExtension();
-        $filename = uniqid('book') . '.' . $ext; // Generate a unique filename
-        $image->move(public_path('assets/img/book/'), $filename); // Save the file to the pub
-
-        $book = Book::create([
+        $book = Book::where('user_id', Auth::user()->id)->latest()->first();
+        $book->update([
             'title' => $request->title,
-            'image' => $filename,
             'category_id' => $request->category_id,
             'description' => $request->description,
-            'user_id' => $request->user_id,
+            'user_id' => Auth::user()->id
         ]);
 
         $genres = [];
@@ -124,6 +118,65 @@ class AuthorController extends Controller
 
         return redirect('/author/novels')->with('success', 'Novel Created Successfully.');
     }
+
+    public function imgStore(Request $request)
+    {
+        // //cropping code start
+        $folderPath = public_path('assets/img/book/');
+
+        // // Ensure the directory exists and is writable
+        if (!File::isDirectory($folderPath)) {
+            File::makeDirectory($folderPath, 0775, true, true);
+        }
+
+        $image_parts = explode(";base64,", $request->image);
+        $image_type_aux = explode("image/", $image_parts[0]);
+        $image_type = $image_type_aux[1];
+        $image_base64 = base64_decode($image_parts[1]);
+
+        $imageName = uniqid() . '.png';
+        $imageFullPath = $folderPath . $imageName;
+
+        file_put_contents($imageFullPath, $image_base64);
+        // //cropping code end
+
+        $saveFile = new Book;
+        $saveFile->image = $imageName;
+        $saveFile->user_id = Auth::user()->id;
+        $saveFile->save();
+        return response()->json(['success' => 'Crop Image Saved/Uploaded Successfully']);
+    }
+
+    public function imgUpdate(Request $request, $id)
+    {
+        $book_img = Book::find($id);
+        //remove book-img from localstorage
+        File::delete(public_path('assets/img/book/'.$book_img->image));
+        // //cropping code start
+        $folderPath = public_path('assets/img/book/');
+
+        // // Ensure the directory exists and is writable
+        if (!File::isDirectory($folderPath)) {
+            File::makeDirectory($folderPath, 0775, true, true);
+        }
+
+        $image_parts = explode(";base64,", $request->image);
+        $image_type_aux = explode("image/", $image_parts[0]);
+        $image_type = $image_type_aux[1];
+        $image_base64 = base64_decode($image_parts[1]);
+
+        $imageName = uniqid() . '.png';
+        $imageFullPath = $folderPath . $imageName;
+
+        file_put_contents($imageFullPath, $image_base64);
+        // //cropping code end
+
+        $book_img->image = $imageName;
+        $book_img->user_id = Auth::user()->id;
+        $book_img->save();
+        return response()->json(['success' => 'Crop Image Saved/Uploaded Successfully']);
+    }
+
     public function status(Request $request, $id){
         Book::find($id)->update([
             'status' => $request->status

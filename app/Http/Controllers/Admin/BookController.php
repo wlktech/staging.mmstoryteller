@@ -163,6 +163,8 @@ class BookController extends Controller
     public function imgUpdate(Request $request, $id)
     {
         $book_img = Book::find($id);
+        //remove book-img from localstorage
+        File::delete(public_path('assets/img/book/'.$book_img->image));
         // //cropping code start
         $folderPath = public_path('assets/img/book/');
 
