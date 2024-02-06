@@ -123,7 +123,7 @@
                             position:'center'
                         }).showToast();
                         setTimeout(function() {
-                            window.location.href = '/admin/book';
+                            window.location.href = '/admin/public/admin/book';
                         }, 2000);
 
 
