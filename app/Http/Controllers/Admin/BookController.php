@@ -134,48 +134,25 @@ class BookController extends Controller
 
     public function imgStore(Request $request)
     {
-        // Validate the incoming request to ensure there is an image provided as a string.
-        // $validated = $request->validate([
-        //     'image' => 'required|string',
-        // ]);
+        $folderPath = public_path('assets/img/book/');
+ 
+        $image_parts = explode(";base64,", $request->image);
+        $image_type_aux = explode("image/", $image_parts[0]);
+        $image_type = $image_type_aux[1];
+        $image_base64 = base64_decode($image_parts[1]);
+ 
+        $imageName = uniqid() . '.png';
+ 
+        $imageFullPath = $folderPath.$imageName;
+ 
+        file_put_contents($imageFullPath, $image_base64);
+ 
+         $saveFile = new Book;
+         $saveFile->image = $imageName;
+         $saveFile->user_id = Auth::user()->id;
+         $saveFile->save();
     
-        try {
-            // Extract and decode the image data from the request.
-            if (preg_match('/^data:image\/(\w+);base64,/', $request->image, $type)) {
-                $data = substr($request->image, strpos($request->image, ',') + 1);
-                $type = strtolower($type[1]); // jpg, png, gif
-    
-                if (!in_array($type, ['jpg', 'jpeg', 'png', 'gif'])) {
-                    throw new \Exception('invalid image type');
-                }
-    
-                $data = base64_decode($data);
-    
-                if ($data === false) {
-                    throw new \Exception('base64_decode failed');
-                }
-            } else {
-                throw new \Exception('did not match data URI with image data');
-            }
-    
-            $folderPath = public_path('assets/img/book/');
-            File::makeDirectory($folderPath, 0775, true, true);
-    
-            $imageName = uniqid() . '.' . $type;
-            $imageFullPath = $folderPath . $imageName;
-    
-            file_put_contents($imageFullPath, $data);
-    
-            // Save the database record
-            $saveFile = new Book;
-            $saveFile->image = $imageName;
-            $saveFile->user_id = Auth::user()->id;
-            $saveFile->save();
-    
-            return response()->json(['success' => 'Crop Image Saved/Uploaded Successfully']);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
-        }
+        return response()->json(['success'=>'Crop Image Uploaded Successfully']);
     }
 
     public function imgUpdate(Request $request, $id)

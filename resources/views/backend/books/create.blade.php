@@ -1,28 +1,40 @@
 @extends('layouts.b-master')
 
 @section('css')
+<meta name="_token" content="{{ csrf_token() }}">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
-{{-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css"> --}}
-<link rel="stylesheet" href="{{ asset('assets/css/cropper/crop.css') }}">
-<style>
-    .img-container {
-    margin-bottom: 10px;
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.6/cropper.css"/>
+<style type="text/css">
+    body{
+        background:#f6d352; 
     }
-    .cropped-container {
-        width: 400px;
-        margin: auto;
-        text-align: center;
-        justify-content: center;
-        background-color: ghostwhite;
-        padding: 20px 20px;
-        display: none;
-        margin-top: 10px;
+   h2{
+        font-weight: bold;
+        font-size:20px;
     }
-    #output {
-        margin: 0 5px;
+    #image {
         display: block;
         max-width: 100%;
+    }
+    .preview {
+        text-align: center;
+        overflow: hidden;
+        width: 160px; 
+        height: 160px;
+        margin: 10px;
+        border: 1px solid red;
+    }
+    /* input{
+        margin-top:40px;
+    } */
+    .section{
+        margin-top:150px;
+        background:#fff;
+        padding:50px 30px;
+    }
+    .modal-lg{
+        max-width: 1000px !important;
     }
 </style>
 @endsection
@@ -51,19 +63,10 @@
                 </div>
                 <div class="mb-3">
                     <label for="imageInput" class="form-label">Choose Image</label>
-                    <input type="file" name="image" id="imageInput" class="form-control" accept="image/*">
+                    <input type="file" name="image" id="imageInput" class="form-control image" accept="image/*">
                     @error('image')
                     <p class="text-danger">*{{ $message }}</p>
                     @enderror
-                    <div class="img-container">
-                        <img id="image" style="display: none; min-width: 75%; height: auto;">
-                    </div>
-                    <div>
-                        <button class="btn btn-sm btn-dark" id="btn-crop">Crop</button>
-                    </div>
-                    <div class="cropped-container">
-                        <img src="" id="output">
-                    </div>
                 </div>
                 <div class="mb-3">
                     <label for="" class="form-label">Choose Category</label>
@@ -105,93 +108,119 @@
         </div>
     </div>
 </div>
+
+
+
+{{-- modal --}}
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">How to crop image before upload image in laravel 9 CodingSeeker</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <img id="image" src="">
+                        </div>
+                        <div class="col-md-4">
+                            <div class="preview"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="crop">Crop</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('script')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.js"></script>
+{{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.js"></script> --}}
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
-<script src="{{ asset("assets/js/cropper/crop.js") }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.6/cropper.js"></script>
 {{-- cropjs --}}
 <script>
-    $(document).ready(function() {
-        $.ajaxSetup({
-          headers: {
-            'X-CSRF-TOKEN': $('meta[name="token"]').attr('content')
-          }
-        });
-        
-        let cropper;
-    
-        const imageInput = $('#imageInput');
-        const imageElement = $('#image');
-        const outputElement = $('#output');
-        const croppedContainer = $('.cropped-container');
-    
-        imageInput.change(function(event) {
-            const file = event.target.files[0];
-            if (!file) {
-                return; // Exit if no file is selected
-            }
-    
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                if (cropper) {
-                    cropper.destroy(); // Clean up any existing cropper instance
-                }
-                imageElement.attr('src', e.target.result).show();
-                // Reinitialize the cropper with the new image
-                cropper = new Cropper(imageElement[0], {
-                    aspectRatio: 2 / 3,
-                    viewMode: 1,
-                });
-            };
-            reader.onerror = function(e) {
-                console.error("Error reading file: ", e.target.error);
-            };
-            reader.readAsDataURL(file);
-        });
-    
-        $('#btn-crop').click(function(e) {
-            e.preventDefault();
-            if (!cropper) {
-                return; // Exit if cropper is not initialized
-            }
-    
-            cropper.getCroppedCanvas().toBlob(function(blob) {
-                const formData = new FormData();
-                formData.append('croppedImage', blob);
-    
-                const url = URL.createObjectURL(blob);
-                outputElement.attr('src', url).show();
-                croppedContainer.css('display', 'flex');
-                console.log(outputElement[0].src);
+    var $modal = $('#modal');
+    var image = document.getElementById('image');
+    var cropper;
 
+    $("body").on("change", ".image", function(e){
+        var files = e.target.files;
+        var done = function (url) {
+            image.src = url;
+            $modal.modal('show');
+        };
+
+        var reader;
+        var file;
+        var url;
+
+        if (files && files.length > 0) {
+            file = files[0];
+
+            if (URL) {
+                done(URL.createObjectURL(file));
+            } else if (FileReader) {
+                reader = new FileReader();
+                reader.onload = function (e) {
+                    done(reader.result);
+                };
+            reader.readAsDataURL(file);
+            }
+        }
+    });
+
+    $modal.on('shown.bs.modal', function () {
+        cropper = new Cropper(image, {
+            aspectRatio: 2 / 3,
+            viewMode: 3,
+            preview: '.preview'
+        });
+    }).on('hidden.bs.modal', function () {
+        cropper.destroy();
+        cropper = null;
+    });
+
+    $("#crop").click(function(){
+        canvas = cropper.getCroppedCanvas({
+            width: 160,
+            height: 160,
+        });
+
+        canvas.toBlob(function(blob) {
+            url = URL.createObjectURL(blob);
+            var reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = function() {
+                var base64data = reader.result; 
                 $.ajax({
-                    url: '{{ route("imgStore") }}',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                    },
-                    success: function(data) {
+                    type: "POST",
+                    dataType: "json",
+                    url: "{{ route('imgStore') }}",
+                    data: {'_token': $('meta[name="_token"]').attr('content'), 'image': base64data},
+                    success: function(data){
                         console.log(data);
+                        $modal.modal('hide');
                         Toastify({
-                            text: "Image Uploaded Successfully.",
-                            className: "text-white",
+                            text:"Image Uploaded Successfully.",
+                            className:"text-white",
                             style: {
                                 background: "#38d100",
                             },
-                            position: 'center',
+                            position:'center'
                         }).showToast();
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Upload failed:", status, error);
-                    },
+                    }
                 });
-            }, 'image/png');
+            }
         });
     });
 </script>

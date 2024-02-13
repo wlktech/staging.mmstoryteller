@@ -1,10 +1,39 @@
 @extends('layouts.b-master')
 
 @section('css')
+<meta name="_token" content="{{ csrf_token() }}">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
-{{-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css"> --}}
-<link rel="stylesheet" href="{{ asset('assets/css/cropper/crop.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.6/cropper.css"/>
+<style type="text/css">
+    body{
+        background:#f6d352; 
+    }
+   h2{
+        font-weight: bold;
+        font-size:20px;
+    }
+    #image {
+        display: block;
+        max-width: 100%;
+    }
+    .preview {
+        text-align: center;
+        overflow: hidden;
+        width: 160px; 
+        height: 160px;
+        margin: 10px;
+        border: 1px solid red;
+    }
+    .section{
+        margin-top:150px;
+        background:#fff;
+        padding:50px 30px;
+    }
+    .modal-lg{
+        max-width: 1000px !important;
+    }
+</style>
 @endsection
 
 @section('content')
@@ -31,19 +60,10 @@
                 </div>
                 <div class="mb-3">
                     <label for="imageInput" class="form-label">Choose Image</label>
-                    <input type="file" name="before_crop_image" id="imageInput" class="form-control" accept="image/*">
+                    <input type="file" name="image" id="imageInput" class="form-control image" accept="image/*">
                     @error('image')
                     <p class="text-danger">*{{ $message }}</p>
                     @enderror
-                    <div class="img-container">
-                        <img id="image" style="display: none; max-width: 100%; height: auto;">
-                    </div>
-                    <div>
-                        <button class="btn btn-sm btn-dark" id="btn-crop">Crop</button>
-                    </div>
-                    <div class="cropped-container">
-                        <img src="" id="output">
-                    </div>
                 </div>
                 <div class="mb-3">
                     <label for="" class="form-label">Choose Category</label>
@@ -106,115 +126,108 @@
         </div>
     </div>
 </div>
+
+
+
+{{-- modal --}}
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">How to crop image before upload image in laravel 9 CodingSeeker</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <img id="image" src="">
+                        </div>
+                        <div class="col-md-4">
+                            <div class="preview"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="crop">Crop</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('script')
-{{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.js"></script> --}}
+
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
-<script src="{{ asset("assets/js/cropper/crop.js") }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.6/cropper.js"></script>
+{{-- cropjs --}}
 <script>
-    $(document).ready(function() {
-        var cropper;
-        $('#imageInput').change(function(event) {
-            var file = event.target.files[0];
-            if (file) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    if (cropper) {
-                        cropper.destroy(); // Destroy the old cropper instance if it exists
-                    }
-                    $('#image').attr('src', e.target.result).show();
-                    // Initialize Cropper.js on the image
-                    cropper = new Cropper(document.getElementById('image'), {
-                        aspectRatio: 2 / 3, // Set the aspect ratio to 2:3
-                        viewMode: 1, // Restrict the crop box to not exceed the size of the canvas
-                    });
-                };
-                reader.readAsDataURL(file); // Convert image file to base-64 string
-            }
-        });
-    
-        $('#btn-crop').click(function(e) {
-            e.preventDefault();
-            if (cropper) {
-                // Get the cropped image data
-                cropper.getCroppedCanvas().toBlob(function(blob) {
-                    var formData = new FormData();
-                    formData.append('croppedImage', blob, 'croppedImage.png');
-    
-                    // Display the cropped image on the page
-                    var url = URL.createObjectURL(blob);
-                    $('#image').attr('src', url).hide();
-                    $('#output').attr('src', url).show();
+    var $modal = $('#modal');
+    var image = document.getElementById('image');
+    var cropper;
 
-                    $('.cropped-container').css('display', 'flex');
-                    $.ajax({
-                        url: '{{ route('imgStore') }}',
-                        type:'POST',
-                        data: {'_token': $('meta[name="csrf-token"]').attr('content'), 'image': response},
-                        success:function(data){
-                            // alert('Crop image has been uploaded');
-                            Toastify({
-                                text:"Image Uploaded Successfully.",
-                                className:"text-white",
-                                style: {
-                                    background: "#38d100",
-                                },
-                                position:'center'
-                            }).showToast();
-                        }
-                    })
-                }, 'image/png');
+    $("body").on("change", ".image", function(e){
+        var files = e.target.files;
+        var done = function (url) {
+            image.src = url;
+            $modal.modal('show');
+        };
+
+        var reader;
+        var file;
+        var url;
+
+        if (files && files.length > 0) {
+            file = files[0];
+
+            if (URL) {
+                done(URL.createObjectURL(file));
+            } else if (FileReader) {
+                reader = new FileReader();
+                reader.onload = function (e) {
+                    done(reader.result);
+                };
+            reader.readAsDataURL(file);
             }
-        });
+        }
     });
-</script>
-{{-- <script>  
-    $(document).ready(function(){
-        $.ajaxSetup({
-          headers: {
-            'X-CSRF-TOKEN': $('meta[name="token"]').attr('content')
-          }
+
+    $modal.on('shown.bs.modal', function () {
+        cropper = new Cropper(image, {
+            aspectRatio: 2 / 3,
+            viewMode: 3,
+            preview: '.preview'
         });
-         
-        $image_crop = $('#image_demo').croppie({
-            enableExif: true,
-            viewport: {
-                width:200,
-                height:300,
-                type:'square' //circle
-            },
-            boundary:{
-                width:400,
-                height:400
-            }    
+    }).on('hidden.bs.modal', function () {
+        cropper.destroy();
+        cropper = null;
+    });
+
+    $("#crop").click(function(){
+        canvas = cropper.getCroppedCanvas({
+            width: 160,
+            height: 160,
         });
-        $('#before_crop_image').on('change', function(){
+
+        canvas.toBlob(function(blob) {
+            url = URL.createObjectURL(blob);
             var reader = new FileReader();
-            reader.onload = function (event) {
-                $image_crop.croppie('bind', {
-                    url: event.target.result
-                }).then(function(){
-                    console.log('jQuery bind complete');
-                });
-            }
-            reader.readAsDataURL(this.files[0]);
-            $('#imageModel').modal('show');
-           
-        });
-        $('.crop_image').click(function(event){
-            $image_crop.croppie('result', {
-                type: 'canvas',
-                size: 'viewport'
-            }).then(function(response){
+            reader.readAsDataURL(blob);
+            reader.onloadend = function() {
+                var base64data = reader.result; 
                 $.ajax({
-                    url: '{{ url("admin/book/image/edit/$book->id") }}',
-                    type:'POST',
-                    data: {'_token': $('meta[name="csrf-token"]').attr('content'), 'image': response},
-                    success:function(data){
-                        $('#imageModel').modal('hide');
-                        // alert('Crop image has been uploaded');
+                    type: "POST",
+                    dataType: "json",
+                    url: "{{ route('imgStore') }}",
+                    data: {'_token': $('meta[name="_token"]').attr('content'), 'image': base64data},
+                    success: function(data){
+                        console.log(data);
+                        $modal.modal('hide');
                         Toastify({
                             text:"Image Uploaded Successfully.",
                             className:"text-white",
@@ -224,11 +237,14 @@
                             position:'center'
                         }).showToast();
                     }
-                })
-            });
+                });
+            }
         });
-    });  
-</script> --}}
+    });
+</script>
+{{-- cropjs --}}
+
+{{-- summernote js --}}
 <script>
     $('#desc').summernote({
       placeholder: 'Write Down Full Text',
@@ -245,7 +261,9 @@
       ]
     });
 
-  </script>
+</script>
+{{-- summernotejs --}}
+{{-- select2 js --}}
 <script>
     $(document).ready(function () {
         $(".select-genre").select2({
@@ -254,4 +272,5 @@
         });
     });
 </script>
+{{-- select2 js --}}
 @endsection
