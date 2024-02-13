@@ -187,7 +187,7 @@
     $modal.on('shown.bs.modal', function () {
         cropper = new Cropper(image, {
             aspectRatio: 2 / 3,
-            viewMode: 3,
+            viewMode: 1,
             preview: '.preview'
         });
     }).on('hidden.bs.modal', function () {
@@ -199,6 +199,13 @@
         canvas = cropper.getCroppedCanvas({
             width: 160,
             height: 160,
+            minWidth: 256,
+            minHeight: 256,
+            maxWidth: 4096,
+            maxHeight: 4096,
+            fillColor: '#fff',
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high',
         });
 
         $("#spinner").removeClass('d-none');
