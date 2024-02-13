@@ -135,7 +135,12 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="crop">Crop</button>
+                <button type="button" class="btn btn-primary" id="crop">
+                    <div class="spinner-border spinner-border-sm d-none" id="spinner" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    Crop
+                </button>
             </div>
         </div>
     </div>
@@ -196,6 +201,8 @@
             height: 160,
         });
 
+        $("#spinner").removeClass('d-none');
+
         canvas.toBlob(function(blob) {
             url = URL.createObjectURL(blob);
             var reader = new FileReader();
@@ -210,6 +217,7 @@
                     success: function(data){
                         console.log(data);
                         $modal.modal('hide');
+                        $("#spinner").addClass('d-none');
                         Toastify({
                             text:"Image Uploaded Successfully.",
                             className:"text-white",
