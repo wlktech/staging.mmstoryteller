@@ -217,6 +217,13 @@
         canvas = cropper.getCroppedCanvas({
             width: 160,
             height: 160,
+            minWidth: 256,
+            minHeight: 256,
+            maxWidth: 4096,
+            maxHeight: 4096,
+            fillColor: '#fff',
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high',
         });
 
         $("#spinner").removeClass('d-none');
@@ -230,7 +237,7 @@
                 $.ajax({
                     type: "POST",
                     dataType: "json",
-                    url: "{{ route('imgStore') }}",
+                    url: "{{ url('/admin/book/image/edit/'.$book->id) }}",
                     data: {'_token': $('meta[name="_token"]').attr('content'), 'image': base64data},
                     success: function(data){
                         console.log(data);

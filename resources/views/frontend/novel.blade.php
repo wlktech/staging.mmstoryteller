@@ -932,7 +932,7 @@
             <div class="d-none d-sm-block">
                 <div class="d-flex heading">
                     <div class="book-img">
-                        <img src="{{ asset('assets/img/book/'.$book->image) }}" class="rounded w-100" alt="">
+                        <img src="{{ asset('assets/img/book/'.$book->image) }}" class="rounded" width="100%" alt="">
                     </div>
                     <div class="text-book mt-0 pt-0">
                         @if ($book->status == "ONGOING")
@@ -994,7 +994,7 @@
             <div class="d-sm-none d-block">
                 <div class="heading">
                     <div class="book-img">
-                        <img src="{{ asset('assets/img/book/'.$book->image) }}" class="rounded w-100" alt="">
+                        <img src="{{ asset('assets/img/book/'.$book->image) }}" class="rounded img-fluid" alt="">
                         @if ($book->status == "ONGOING")
                             <span class="on-status badge">ONGOING</span>
                         @elseif($book->status == "COMPLETED")

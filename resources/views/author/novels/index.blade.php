@@ -107,20 +107,20 @@
                     <tr>
                         <td>{{ $no++ }}</td>
                         <td><img src="{{ asset('assets/img/book/'.$novel->image) }}" class="img-thumbnail" width="48px" alt=""></td>
-                        <td style="width: 300px;">{{ $novel->title }}</td>
+                        <td style="width: 300px;">{{ $novel->title ?? "" }}</td>
                         <td style="text-align: center">
                             {{ $novel->chapter->count() }}
                             {{-- @if ($novel->genre->count() > 1)
-                            <span class="badge badge-pink">{{ $novel->genre[0]->name }}</span><br>
-                            <span class="badge badge-pink">{{ $novel->genre[1]->name }}</span><br>
+                            <span class="badge badge-pink">{{ $novel->genre[0]->name ?? "" }}</span><br>
+                            <span class="badge badge-pink">{{ $novel->genre[1]->name ?? "" }}</span><br>
                             @else
-                            <span class="badge badge-pink">{{ $novel->genre[0]->name }}</span><br>
+                            <span class="badge badge-pink">{{ $novel->genre[0]->name ?? "" }}</span><br>
                             @endif --}}
                             {{-- @foreach ($novel->genre as $genre)
                             <span class="badge badge-pink">{{ $genre->name }}</span><br>
                             @endforeach --}}
                         </td>
-                        <td>{{ $novel->category->name }}</td>
+                        <td>{{ $novel->category->name ?? "" }}</td>
                         <td>
                             @if ($novel->status == "ONGOING")
                                 <span class="badge badge-warning">{{ $novel->status }}</span>
