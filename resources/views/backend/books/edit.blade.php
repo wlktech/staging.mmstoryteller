@@ -3,7 +3,8 @@
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
+{{-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css"> --}}
+<link rel="stylesheet" href="{{ asset('assets/css/cropper/crop.css') }}">
 @endsection
 
 @section('content')
@@ -29,12 +30,20 @@
                     @enderror
                 </div>
                 <div class="mb-3">
-                    <label for="before_crop_image" class="form-label">Choose Image</label>
-                    <input type="file" name="before_crop_image" id="before_crop_image" class="form-control" accept="image/*">
+                    <label for="imageInput" class="form-label">Choose Image</label>
+                    <input type="file" name="before_crop_image" id="imageInput" class="form-control" accept="image/*">
                     @error('image')
                     <p class="text-danger">*{{ $message }}</p>
                     @enderror
-                    {{-- <img src="{{ asset('assets/img/book/'.$book->image) }}" class="mt-2" width="200px" alt=""> --}}
+                    <div class="img-container">
+                        <img id="image" style="display: none; max-width: 100%; height: auto;">
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-dark" id="btn-crop">Crop</button>
+                    </div>
+                    <div class="cropped-container">
+                        <img src="" id="output">
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label for="" class="form-label">Choose Category</label>
@@ -97,33 +106,71 @@
         </div>
     </div>
 </div>
-
-
-{{-- modal --}}
-<div id="imageModel" class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLabel">Novel Cover</h5>
-          <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-        <div id="image_demo" style="width:350px; margin-top:30px"></div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary crop_image">Save changes</button>
-        </div>
-      </div>
-    </div>
-</div>
 @endsection
 
 @section('script')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.js"></script>
+{{-- <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.js"></script> --}}
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
-<script>  
+<script src="{{ asset("assets/js/cropper/crop.js") }}"></script>
+<script>
+    $(document).ready(function() {
+        var cropper;
+        $('#imageInput').change(function(event) {
+            var file = event.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    if (cropper) {
+                        cropper.destroy(); // Destroy the old cropper instance if it exists
+                    }
+                    $('#image').attr('src', e.target.result).show();
+                    // Initialize Cropper.js on the image
+                    cropper = new Cropper(document.getElementById('image'), {
+                        aspectRatio: 2 / 3, // Set the aspect ratio to 2:3
+                        viewMode: 1, // Restrict the crop box to not exceed the size of the canvas
+                    });
+                };
+                reader.readAsDataURL(file); // Convert image file to base-64 string
+            }
+        });
+    
+        $('#btn-crop').click(function(e) {
+            e.preventDefault();
+            if (cropper) {
+                // Get the cropped image data
+                cropper.getCroppedCanvas().toBlob(function(blob) {
+                    var formData = new FormData();
+                    formData.append('croppedImage', blob, 'croppedImage.png');
+    
+                    // Display the cropped image on the page
+                    var url = URL.createObjectURL(blob);
+                    $('#image').attr('src', url).hide();
+                    $('#output').attr('src', url).show();
+
+                    $('.cropped-container').css('display', 'flex');
+                    $.ajax({
+                        url: '{{ route('imgStore') }}',
+                        type:'POST',
+                        data: {'_token': $('meta[name="csrf-token"]').attr('content'), 'image': response},
+                        success:function(data){
+                            // alert('Crop image has been uploaded');
+                            Toastify({
+                                text:"Image Uploaded Successfully.",
+                                className:"text-white",
+                                style: {
+                                    background: "#38d100",
+                                },
+                                position:'center'
+                            }).showToast();
+                        }
+                    })
+                }, 'image/png');
+            }
+        });
+    });
+</script>
+{{-- <script>  
     $(document).ready(function(){
         $.ajaxSetup({
           headers: {
@@ -181,7 +228,7 @@
             });
         });
     });  
-</script>
+</script> --}}
 <script>
     $('#desc').summernote({
       placeholder: 'Write Down Full Text',
