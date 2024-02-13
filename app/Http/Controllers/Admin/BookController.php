@@ -134,30 +134,25 @@ class BookController extends Controller
 
     public function imgStore(Request $request)
     {
-        // //cropping code start
         $folderPath = public_path('assets/img/book/');
-
-        // // Ensure the directory exists and is writable
-        if (!File::isDirectory($folderPath)) {
-            File::makeDirectory($folderPath, 0775, true, true);
-        }
-
+ 
         $image_parts = explode(";base64,", $request->image);
         $image_type_aux = explode("image/", $image_parts[0]);
         $image_type = $image_type_aux[1];
         $image_base64 = base64_decode($image_parts[1]);
-
+ 
         $imageName = uniqid() . '.png';
-        $imageFullPath = $folderPath . $imageName;
-
+ 
+        $imageFullPath = $folderPath.$imageName;
+ 
         file_put_contents($imageFullPath, $image_base64);
-        // //cropping code end
-
-        $saveFile = new Book;
-        $saveFile->image = $imageName;
-        $saveFile->user_id = Auth::user()->id;
-        $saveFile->save();
-        return response()->json(['success' => 'Crop Image Saved/Uploaded Successfully']);
+ 
+         $saveFile = new Book;
+         $saveFile->image = $imageName;
+         $saveFile->user_id = Auth::user()->id;
+         $saveFile->save();
+    
+        return response()->json(['success'=>'Crop Image Uploaded Successfully']);
     }
 
     public function imgUpdate(Request $request, $id)
