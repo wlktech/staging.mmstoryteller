@@ -56,9 +56,6 @@
                 <p class="text-danger">*{{ $message }}</p>
                 @enderror
             </div>
-            <div class="text-end">
-                <button type="submit" class="btn btn-primary"><i class="fas fa-pen-to-square mr-2"></i>Edit</button>
-            </div>
         </div>
     </div>
 </div>
