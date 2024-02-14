@@ -1,9 +1,39 @@
 @extends('layouts.b-master')
 
 @section('css')
+<meta name="_token" content="{{ csrf_token() }}">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.6/cropper.css"/>
+<style type="text/css">
+    body{
+        background:#f6d352; 
+    }
+   h2{
+        font-weight: bold;
+        font-size:20px;
+    }
+    #image {
+        display: block;
+        max-width: 100%;
+    }
+    .preview {
+        text-align: center;
+        overflow: hidden;
+        width: 160px; 
+        height: 160px;
+        margin: 10px;
+        border: 1px solid red;
+    }
+    .section{
+        margin-top:150px;
+        background:#fff;
+        padding:50px 30px;
+    }
+    .modal-lg{
+        max-width: 1000px !important;
+    }
+</style>
 @endsection
 
 @section('content')
@@ -19,101 +49,136 @@
             </div>
         </div>
         <div class="container">
-            {{-- <form action="{{ url('/admin/book/edit/'.$book->id) }}" method="post" enctype="multipart/form-data">
-                @csrf
-                <div class="mb-3">
-                    <label for="" class="form-label">Choose Image (1050x1650px)</label>
-                    <input type="file" name="image" class="form-control">
-                    @error('image')
-                    <p class="text-danger">*{{ $message }}</p>
-                    @enderror
-                    <img src="{{ asset('assets/img/book/'.$book->image) }}" class="mt-2" width="200px" alt="">
-                </div>
-                <input type="hidden" name="user_id" value="{{ Auth::user()->id }}">
-                <div class="text-end">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-pen-to-square mr-2"></i>Edit</button>
-                </div>
-            </form> --}}
             <div class="mb-3">
-                <label for="before_crop_image" class="form-label">Choose Image</label>
-                <input type="file" name="before_crop_image" id="before_crop_image" class="form-control" accept="image/*">
+                <label for="imageInput" class="form-label">Choose Image</label>
+                <input type="file" name="image" id="imageInput" class="form-control image" accept="image/*">
                 @error('image')
                 <p class="text-danger">*{{ $message }}</p>
                 @enderror
-                {{-- <img src="{{ asset('assets/img/book/'.$book->image) }}" class="mt-2" width="200px" alt=""> --}}
+            </div>
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-pen-to-square mr-2"></i>Edit</button>
             </div>
         </div>
     </div>
 </div>
+
+
+
 {{-- modal --}}
-<div id="imageModel" class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLabel">Novel Cover</h5>
-          <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                {{-- <h5 class="modal-title" id="modalLabel">How to crop image before upload image in laravel 9 CodingSeeker</h5> --}}
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <img id="image" src="">
+                        </div>
+                        <div class="col-md-4">
+                            <div class="preview"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="crop">
+                    <div class="spinner-border spinner-border-sm d-none" id="spinner" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    Crop
+                </button>
+            </div>
         </div>
-        <div class="modal-body">
-        <div id="image_demo" style="width:350px; margin-top:30px"></div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary crop_image">Save changes</button>
-        </div>
-      </div>
     </div>
 </div>
 @endsection
 
 @section('script')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
-<script>  
-    $(document).ready(function(){
-        $.ajaxSetup({
-          headers: {
-            'X-CSRF-TOKEN': $('meta[name="token"]').attr('content')
-          }
-        });
-         
-        $image_crop = $('#image_demo').croppie({
-            enableExif: true,
-            viewport: {
-                width:200,
-                height:300,
-                type:'square' //circle
-            },
-            boundary:{
-                width:400,
-                height:400
-            }    
-        });
-        $('#before_crop_image').on('change', function(){
-            var reader = new FileReader();
-            reader.onload = function (event) {
-                $image_crop.croppie('bind', {
-                    url: event.target.result
-                }).then(function(){
-                    console.log('jQuery bind complete');
-                });
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.6/cropper.js"></script>
+{{-- cropjs --}}
+<script>
+    var $modal = $('#modal');
+    var image = document.getElementById('image');
+    var cropper;
+
+    $("body").on("change", ".image", function(e){
+        var files = e.target.files;
+        var done = function (url) {
+            image.src = url;
+            $modal.modal('show');
+        };
+
+        var reader;
+        var file;
+        var url;
+
+        if (files && files.length > 0) {
+            file = files[0];
+
+            if (URL) {
+                done(URL.createObjectURL(file));
+            } else if (FileReader) {
+                reader = new FileReader();
+                reader.onload = function (e) {
+                    done(reader.result);
+                };
+            reader.readAsDataURL(file);
             }
-            reader.readAsDataURL(this.files[0]);
-            $('#imageModel').modal('show');
-           
+        }
+    });
+
+    $modal.on('shown.bs.modal', function () {
+        cropper = new Cropper(image, {
+            aspectRatio: 2 / 3,
+            viewMode: 3,
+            preview: '.preview'
         });
-        $('.crop_image').click(function(event){
-            $image_crop.croppie('result', {
-                type: 'canvas',
-                size: 'viewport'
-            }).then(function(response){
+    }).on('hidden.bs.modal', function () {
+        cropper.destroy();
+        cropper = null;
+    });
+
+    $("#crop").click(function(){
+        canvas = cropper.getCroppedCanvas({
+            width: 160,
+            height: 160,
+            minWidth: 256,
+            minHeight: 256,
+            maxWidth: 4096,
+            maxHeight: 4096,
+            fillColor: '#fff',
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high',
+        });
+
+        $("#spinner").removeClass('d-none');
+
+        canvas.toBlob(function(blob) {
+            url = URL.createObjectURL(blob);
+            var reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = function() {
+                var base64data = reader.result; 
                 $.ajax({
-                    url: '{{ url("admin/book/image/edit/$book->id") }}',
-                    type:'POST',
-                    data: {'_token': $('meta[name="csrf-token"]').attr('content'), 'image': response},
-                    success:function(data){
-                        $('#imageModel').modal('hide');
-                        // alert('Crop image has been uploaded');
+                    type: "POST",
+                    dataType: "json",
+                    url: "{{ url('/admin/book/image/edit/'.$book->id) }}",
+                    data: {'_token': $('meta[name="_token"]').attr('content'), 'image': base64data},
+                    success: function(data){
+                        console.log(data);
+                        $modal.modal('hide');
+                        $("#spinner").addClass('d-none');
                         Toastify({
                             text:"Image Uploaded Successfully.",
                             className:"text-white",
@@ -122,40 +187,11 @@
                             },
                             position:'center'
                         }).showToast();
-                        setTimeout(function() {
-                            window.location.href = '/admin/public/admin/book';
-                        }, 2000);
-
-
                     }
-                })
-            });
-        });
-    });  
-</script>
-<script>
-    $('#desc').summernote({
-      placeholder: 'Write Down Full Text',
-      tabsize: 2,
-      height: 120,
-      toolbar: [
-        ['style', ['style']],
-        ['font', ['bold', 'underline', 'clear']],
-        ['color', ['color']],
-        ['para', ['ul', 'ol', 'paragraph']],
-        ['table', ['table']],
-        // ['insert', ['link', 'picture', 'video']],
-        ['view', ['fullscreen', 'codeview', 'help']]
-      ]
-    });
-
-  </script>
-<script>
-    $(document).ready(function () {
-        $(".select-genre").select2({
-            placeholder: 'Choose Genre',
-            // maximumSelectionLength: 4
+                });
+            }
         });
     });
 </script>
+{{-- cropjs --}}
 @endsection
