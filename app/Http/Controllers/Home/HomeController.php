@@ -34,67 +34,42 @@ class HomeController extends Controller
         //home banners
 
         // popular series
+        $popularBooksQuery = Book::has('chapter')->withCount('order')->orderBy('order_count', 'desc')->orwhere('popular', 1);
         //desktop view
-        $popularBooks = Book::has('chapter')->withCount('order')
-            ->orderBy('order_count', 'desc')
-            ->orwhere('popular', '1')->take(20)
-            ->get();
-            // return $popularBooks;
+        $popularBooks = $popularBooksQuery->take(20)->get();
         //desktop view
         //mobile view
-        $popularMobile = Book::has('chapter')->withCount('order')
-            ->orderBy('order_count', 'desc')
-            ->orwhere('popular', '1')->take(9)
-            ->get();
+        $popularMobile = $popularBooksQuery->take(9)->get();
         //mobile view
         // popular series
 
         //new series //logic is latest created book or new-switch = 1
+        $newBooksQuery = Book::has('chapter')->withCount('order')->orderBy('created_at', 'desc')->orwhere('new', 1);
         //desktop
-        $newBooks = Book::has('chapter')
-        ->latest('created_at')
-        ->orwhere('new', '1')->take(20)
-        ->get();
-
+        $newBooks = $newBooksQuery->take(20)->get();
         //mobile
-        $newMobile = Book::has('chapter')
-        ->latest('created_at')
-        ->orwhere('new', '1')->take(9)
-        ->get();
+        $newMobile = $newBooksQuery->take(9)->get();
         //new series
 
         //fanfic
+        $fanBooksQuery = Book::has('chapter')->whereHas('category', function($query){
+            $query->where('name', 'Fanfic');
+        })
+        ->latest('created_at');
         //desktop
-        $fanBooks = Book::has('chapter')->whereHas('category', function($query){
-            $query->where('name', 'Fanfic');
-        })
-        ->latest('created_at')->take(20)
-        ->get();
+        $fanBooks = $fanBooksQuery->take(20)->get();
         //mobile
-        $fanMobile = Book::has('chapter')->whereHas('category', function($query){
-            $query->where('name', 'Fanfic');
-        })
-        ->latest('created_at')->take(9)
-        ->get();
+        $fanMobile = $fanBooksQuery->take(9)->get();
         // return $fanBooks;
 
         // latest releases
         $latestChapters = Chapter::latest()->get();
+        $latestBooksQuery = Book::whereIn('id', $latestChapters->pluck('book_id'))->has('chapter')->distinct();
         //desktop
-        $latestBooks = Book::whereIn('id', $latestChapters->pluck('book_id'))
-        ->has('chapter')
-        ->distinct()->take(20)
-        ->latest()
-        ->get();
+        $latestBooks = $latestBooksQuery->distinct()->take(20)->latest()->get();
         //mobile
-        $latestMobile = Book::whereIn('id', $latestChapters->pluck('book_id'))
-        ->has('chapter')
-        ->distinct()->take(9)
-        ->latest()
-        ->get();
+        $latestMobile = $latestBooksQuery->distinct()->take(9)->latest()->get();
         // latest releases
-
-        // return $latestBooks;
 
         return view('frontend.home', compact('banners', 'popularBooks', 'popularMobile', 'latestBooks','latestMobile', 'newBooks','newMobile', 'fanBooks', 'fanMobile'));
     }
@@ -147,15 +122,10 @@ class HomeController extends Controller
         //FIFO
 
         $orders = Order::where('book_id', $id)->get();
-        $relatedBooks = Book::has('chapter')->where('category_id', $book->category_id)->whereNotIn('id', [$book->id])
-        ->inRandomOrder()
-        ->limit(4)
-        ->get();
-
-        $mobileBooks = Book::has('chapter')->where('category_id', $book->category_id)->whereNotIn('id', [$book->id])
-        ->inRandomOrder()
-        ->limit(3)
-        ->get();
+        $relatedBooksQuery = Book::has('chapter')->where('category_id', $book->category_id)->whereNotIn('id', [$book->id])
+        ->inRandomOrder();
+        $relatedBooks = $relatedBooksQuery->limit(4)->get();
+        $mobileBooks = $relatedBooksQuery->limit(3)->get();
 
         $reviews = Review::where('book_id', $book->id)->latest('created_at')->get();
         // return $unorderChapters;
